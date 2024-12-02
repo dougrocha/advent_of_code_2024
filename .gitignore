@@ -1,0 +1,6 @@
+debug/
+target/
+
+session_token.txt
+
+inputs/
