@@ -58,42 +58,44 @@ pub fn part_two(input: &str) -> Option<u32> {
 
 fn is_safe(numbers: &[i32]) -> bool {
     let mut direction = None;
-    let mut safe = true;
 
-    numbers.windows(2).for_each(|x| {
-        let diff = x[1] - x[0];
+    numbers
+        .iter()
+        .tuple_windows::<(_, _)>()
+        .map(|(a, b)| b - a)
+        .all(|diff| {
+            if diff.abs() > 3 {
+                return false;
+            }
 
-        if diff.abs() > 3 {
-            safe = false;
-        }
+            if diff == 0 {
+                return false;
+            }
 
-        if diff == 0 {
-            safe = false;
-        }
-
-        match direction {
-            Some(Direction::Asc) => {
-                if diff < 0 {
-                    safe = false;
+            match direction {
+                Some(Direction::Asc) => {
+                    if diff < 0 {
+                        return false;
+                    }
+                    true
+                }
+                Some(Direction::Desc) => {
+                    if diff > 0 {
+                        return false;
+                    }
+                    true
+                }
+                None => {
+                    if diff < 0 {
+                        direction = Some(Direction::Desc);
+                    }
+                    if diff > 0 {
+                        direction = Some(Direction::Asc);
+                    }
+                    true
                 }
             }
-            Some(Direction::Desc) => {
-                if diff > 0 {
-                    safe = false;
-                }
-            }
-            None => {
-                if diff < 0 {
-                    direction = Some(Direction::Desc);
-                }
-                if diff > 0 {
-                    direction = Some(Direction::Asc);
-                }
-            }
-        }
-    });
-
-    safe
+        })
 }
 
 #[cfg(test)]
