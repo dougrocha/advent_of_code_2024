@@ -3,7 +3,7 @@ use std::fs;
 
 pub fn create_files(day: Day) {
     let input_path = format!("./inputs/{day}.txt");
-    let example_path = format!("./example/{day}.txt");
+    let example_path = format!("./examples/{day}.txt");
     let module_path = format!("./src/bin/{day}.rs");
 
     let module_template = MODULE_TEMPLATE_TEXT.replace("%%DAY%%", format!("{day}").as_str());

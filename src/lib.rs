@@ -99,23 +99,38 @@ fn download_day(day: Day) -> Result<String> {
     Ok(String::from_utf8(buf).expect("buf turn into string"))
 }
 
-pub fn read_input(day: Day) -> Result<String> {
-    let path = get_path("input", day);
+pub fn read_input(day: Day) -> String {
+    let path = get_path("inputs", day);
 
     if let Ok(input) = fs::read_to_string(&path) {
-        return Ok(input);
+        return input;
     }
 
-    let input = download_day(day)?;
+    let input = download_day(day).expect("day to be downloaded");
     let _ = fs::write(path, &input);
-    Ok(input)
+    input
 }
 
 pub fn read_example(day: Day) -> String {
-    let path = get_path("example", day);
+    let path = get_path("examples", day);
 
     let input = fs::read_to_string(&path);
     input.expect("example file to be opened")
+}
+
+pub fn execute_parts<F1, F2>(input: &str, day: Day, part_one: F1, part_two: F2)
+where
+    F1: FnOnce(&str) -> Option<u32>,
+    F2: FnOnce(&str) -> Option<u32>,
+{
+    println!("Running day: {}", day);
+    if let Some(res) = part_one(input) {
+        println!("Part one: {:?}", res);
+    }
+
+    if let Some(res) = part_two(input) {
+        println!("Part two: {:?}", res);
+    }
 }
 
 #[macro_export]
@@ -129,11 +144,8 @@ macro_rules! solution {
         const DAY: $crate::day::Day = $crate::day!($day);
 
         fn main() {
-            // TODO: Finish this
-            // use $crate::template::runner::*;
             let input = $crate::read_input(DAY);
-            println!("input is being read for {:?}", DAY);
-            // $( run_part($func, &input, DAY, $part); )*
+            $crate::execute_parts(&input, DAY, part_one, part_two);
         }
     };
 }
