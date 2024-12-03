@@ -24,7 +24,7 @@ impl Day {
 
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:02}", self.0)
+        write!(f, "{:0>2}", self.0)
     }
 }
 

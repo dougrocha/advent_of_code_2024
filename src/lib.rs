@@ -21,59 +21,9 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Default)]
-pub struct Inputs {
-    session_token: Option<String>,
-}
-
-impl Inputs {
-    pub fn new() -> Self {
-        Inputs::default()
-    }
-
-    pub fn get(&mut self, day: Day) -> Result<Vec<u8>> {
-        let path = &format!("./inputs/{:0>2}.txt", day.into_inner());
-        let path = Path::new(&path);
-
-        if let Ok(input) = fs::read(path) {
-            return Ok(input);
-        }
-
-        let input = self.download_day(day)?;
-        let _ = fs::write(path, &input);
-        Ok(input)
-    }
-
-    fn get_session_token(&mut self) -> Result<&str> {
-        if self.session_token.is_none() {
-            let session_token = fs::read_to_string("./session_token.txt")
-                .expect("Should have been able to read token");
-            self.session_token = Some(session_token.trim().to_string());
-        }
-        Ok(self.session_token.as_ref().unwrap())
-    }
-
-    pub fn download_day(&mut self, day: Day) -> Result<Vec<u8>> {
-        let session_token = self.get_session_token()?;
-        let cookie = format!("session={session_token}");
-
-        let href = format!("https://adventofcode.com/2024/day/{:?}/input", day);
-        let body = ureq::get(&href)
-            .set("cookie", &cookie)
-            .timeout(Duration::from_secs(3))
-            .call()
-            .map_err(Box::new)?;
-
-        let mut buf = Vec::new();
-        let _ = body.into_reader().read_to_end(&mut buf);
-
-        Ok(buf)
-    }
-}
-
 fn get_path(path: &str, day: Day) -> PathBuf {
-    let path = &format!("./{path}/{:0>2}.txt", day.into_inner());
-    let path = Path::new(path);
+    let path = format!("./{path}/{day}.txt");
+    let path = Path::new(&path);
 
     path.to_path_buf()
 }
@@ -84,9 +34,12 @@ fn get_session_token() -> Result<String> {
 
 fn download_day(day: Day) -> Result<String> {
     let session_token = get_session_token()?;
-    let cookie = format!("session={session_token}");
+    let cookie = format!("session={}", &session_token.trim_end());
 
-    let href = format!("https://adventofcode.com/2024/day/{:?}/input", day);
+    let href = format!(
+        "https://adventofcode.com/2024/day/{}/input",
+        day.into_inner()
+    );
     let body = ureq::get(&href)
         .set("cookie", &cookie)
         .timeout(Duration::from_secs(3))

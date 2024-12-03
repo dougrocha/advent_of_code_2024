@@ -1,23 +1,30 @@
-use advent_of_code_2024::{day::Day, Inputs};
-use clap::Parser;
+use advent_of_code_2024::{day::Day, template::create_files};
+use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 struct Args {
-    #[arg(short, long)]
-    day: Option<u8>,
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Day { day: Day },
+    Setup { day: Day },
 }
 
 fn main() {
     let args = Args::parse();
 
-    dbg!(&args);
-
-    let mut inputs = Inputs::new();
-
-    if let Some(day) = args.day {
-        let input = inputs.get(Day::new(day));
-
-        let output = String::from_utf8(input.unwrap()).unwrap();
-        dbg!(output);
+    match args.command {
+        Commands::Day { day } => {
+            // let input = inputs.get(day);
+            //
+            // let output = String::from_utf8(input.unwrap()).unwrap();
+            // dbg!(output);
+        }
+        Commands::Setup { day } => {
+            create_files(day);
+        }
     }
 }

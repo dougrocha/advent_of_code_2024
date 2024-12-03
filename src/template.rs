@@ -6,7 +6,8 @@ pub fn create_files(day: Day) {
     let example_path = format!("./examples/{day}.txt");
     let module_path = format!("./src/bin/{day}.rs");
 
-    let module_template = MODULE_TEMPLATE_TEXT.replace("%%DAY%%", format!("{day}").as_str());
+    let module_template =
+        MODULE_TEMPLATE_TEXT.replace("%%DAY%%", format!("{:?}", day.into_inner()).as_str());
     let _ = fs::write(module_path, module_template);
 
     let downloaded_input = download_day(day).expect("day to be downloaded");
@@ -16,8 +17,7 @@ pub fn create_files(day: Day) {
     println!("Remember to fill out example path");
 }
 
-const MODULE_TEMPLATE_TEXT: &str = r"
-advent_of_code_2024::solution!(%%DAY%%);
+const MODULE_TEMPLATE_TEXT: &str = r"advent_of_code_2024::solution!(%%DAY%%);
 
 pub fn part_one(input: &str) -> Option<u32> {
     None
