@@ -1,35 +1,22 @@
 advent_of_code_2024::solution!(3);
 
-pub fn part_one(input: &str) -> Option<u32> {
-    let mut rest = input;
+struct MulParser<'a> {
+    rest: &'a str,
+}
 
-    let mut sum = 0;
+impl Iterator for MulParser<'_> {
+    type Item = u32;
 
-    'outer: loop {
-        let mut chars = rest.chars();
-
-        if chars.next().is_none() {
-            break;
-        }
-
-        rest = chars.as_str();
-
-        let mul = match &rest.get(..4) {
-            Some(mul) => *mul,
-            None => break,
-        };
-
-        if mul == "mul(" {
-            rest = &rest[3..];
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(index) = self.rest.find("mul(") {
+            self.rest = &self.rest[index + 3..];
 
             let mut read = 0;
 
-            if rest.starts_with('(') {
-                chars = rest.chars();
+            if self.rest.starts_with('(') {
+                let chars = self.rest.chars();
 
-                loop {
-                    let c = chars.next()?;
-
+                for c in chars {
                     match c {
                         '0'..='9' | ',' | '(' => {
                             read += 1;
@@ -39,27 +26,39 @@ pub fn part_one(input: &str) -> Option<u32> {
                             break;
                         }
                         _ => {
-                            rest = &rest[read..];
-                            continue 'outer;
+                            self.rest = &self.rest[read..];
+                            return Some(0);
                         }
                     }
                 }
             }
 
-            let s = &rest[1..read - 1]
+            let s = &self.rest[1..read - 1]
                 .split(',')
                 .map(|x| x.parse::<u32>().unwrap_or(0))
                 .collect::<Vec<_>>();
 
-            sum += s[0] * s[1];
+            return Some(s[0] * s[1]);
         }
+
+        None
     }
+}
+
+pub fn part_one(input: &str) -> Option<u32> {
+    let parser = MulParser { rest: input };
+
+    let sum = parser.sum::<u32>();
 
     Some(sum)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let parser = MulParser { rest: input };
+
+    let sum = parser.sum::<u32>();
+
+    Some(sum)
 }
 
 #[cfg(test)]
@@ -75,7 +74,8 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        let result =
+            part_two("&xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))");
+        assert_eq!(result, Some(48));
     }
 }
