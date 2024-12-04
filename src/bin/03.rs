@@ -54,11 +54,22 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let parser = MulParser { rest: input };
+    let mut splits = input.split("don't()");
 
-    let sum = parser.sum::<u32>();
+    let sum = part_one(splits.next().unwrap()).unwrap_or(0);
 
-    Some(sum)
+    // old
+    // for s in splits.by_ref() {
+    //     if let Some(do_start) = s.find("do()") {
+    //         let rest = &s[do_start..];
+    //         sum += part_one(rest).unwrap_or(0);
+    //     }
+    // }
+
+    Some(splits.fold(sum, |acc, e| {
+        let do_str = &e[e.find("do()").unwrap_or(e.len())..];
+        acc + part_one(do_str).unwrap_or(0)
+    }))
 }
 
 #[cfg(test)]
