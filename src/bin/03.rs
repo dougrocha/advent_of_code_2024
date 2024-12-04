@@ -3,55 +3,59 @@ advent_of_code_2024::solution!(3);
 pub fn part_one(input: &str) -> Option<u32> {
     let mut rest = input;
 
-    let numbers: Vec<(u32, u32)> = Vec::new();
+    let mut sum = 0;
 
-    loop {
+    'outer: loop {
         let mut chars = rest.chars();
 
-        let next = match chars.next() {
-            Some(char) => char,
-            None => break,
-        };
+        if chars.next().is_none() {
+            break;
+        }
+
         rest = chars.as_str();
 
-        let mul = &rest[..4];
+        let mul = match &rest.get(..4) {
+            Some(mul) => *mul,
+            None => break,
+        };
+
         if mul == "mul(" {
             rest = &rest[3..];
 
             let mut read = 0;
 
-            dbg!(rest);
-
             if rest.starts_with('(') {
-                rest = &rest[1..];
                 chars = rest.chars();
 
                 loop {
                     let c = chars.next()?;
+
                     match c {
-                        '0'..='9' => {
-                            dbg!("number", c);
-                        }
-                        ',' => {
-                            dbg!("comma", c);
+                        '0'..='9' | ',' | '(' => {
+                            read += 1;
                         }
                         ')' => {
-                            dbg!("ending", c);
+                            read += 1;
                             break;
                         }
-                        _ => break,
+                        _ => {
+                            rest = &rest[read..];
+                            continue 'outer;
+                        }
                     }
-                    read += 1;
                 }
             }
 
-            dbg!(&rest[..read]); // "8,5"
+            let s = &rest[1..read - 1]
+                .split(',')
+                .map(|x| x.parse::<u32>().unwrap_or(0))
+                .collect::<Vec<_>>();
 
-            // TODO: Split this string and compute math
+            sum += s[0] * s[1];
         }
     }
 
-    None
+    Some(sum)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
