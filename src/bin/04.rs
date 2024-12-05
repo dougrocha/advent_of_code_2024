@@ -75,63 +75,31 @@ impl XmasMap {
         Some(row * self.width + col)
     }
 
-    /// find xmas match after m has been found
-    fn find_m(&mut self, index: usize) {
-        let directions = vec![
-            Direction::Up,
-            Direction::Down,
-            Direction::Left,
-            Direction::Right,
-            Direction::UpRight,
-            Direction::UpLeft,
-            Direction::DownRight,
-            Direction::DownLeft,
-        ];
-
-        for dir in directions {
-            let (row_offset, col_offset) = dir.to_offset();
-
-            let (row, col) = self.index_to_coords(index);
-
-            if let Some(index) =
-                self.coords_to_index(row as i32 + row_offset, col as i32 + col_offset)
-            {
-                let next_letter = &self.arr[index];
-
-                if next_letter.as_str() == "M" {
-                    let (row, col) = self.index_to_coords(index);
-                    if let Some(next_index) =
-                        self.coords_to_index(row as i32 + row_offset, col as i32 + col_offset)
-                    {
-                        self.find_as(next_index, &dir);
-                    }
-                }
-            }
-        }
-    }
-
-    fn find_as(&mut self, index: usize, dir: &Direction) {
+    /// Find XMAS match after m has been found
+    fn search_direction(&self, index: usize, dir: Direction) -> bool {
         let (row_offset, col_offset) = dir.to_offset();
 
         let (row, col) = self.index_to_coords(index);
+        let mut row = row as i32;
+        let mut col = col as i32;
 
-        let next_letter = &self.arr[index];
+        for char in ["M", "A", "S"] {
+            row += row_offset;
+            col += col_offset;
 
-        if next_letter.as_str() == "A" {
-            if let Some(next_index) =
-                self.coords_to_index(row as i32 + row_offset, col as i32 + col_offset)
-            {
-                let this = &mut *self;
-                let next_letter = &this.arr[next_index];
-
-                if next_letter.as_str() == "S" {
-                    this.count += 1;
-                };
+            if let Some(next_index) = self.coords_to_index(row, col) {
+                if self.arr[next_index] != char {
+                    return false;
+                }
+            } else {
+                return false;
             }
         }
+        true
     }
 
-    fn find_xmas(&mut self, index: usize) {
+    /// Finding X-MAS
+    fn find_xmas(&self, index: usize) -> bool {
         let directions = [
             Direction::UpLeft,
             Direction::DownLeft,
@@ -139,40 +107,22 @@ impl XmasMap {
             Direction::DownRight,
         ];
 
-        let vals = directions
+        let surrounding = directions
             .iter()
             .flat_map(|dir| self.get_dir(index, *dir))
-            .collect::<Vec<String>>();
+            .collect::<Vec<&str>>();
+        let slice = surrounding.as_slice();
 
-        if vals.len() == 4 {
-            let vals = vals.iter().map(|x| x.as_str()).collect::<Vec<_>>();
-            match vals[..] {
-                ["M", "M", "S", "S"] => {
-                    let (row, col) = self.index_to_coords(index);
-                    println!("{} - ({:?}): {:?}", index + 1, (row + 1, col + 1), vals);
-                    self.count += 1;
-                }
-                ["S", "S", "M", "M"] => {
-                    let (row, col) = self.index_to_coords(index);
-                    println!("{} - ({:?}): {:?}", index + 1, (row + 1, col + 1), vals);
-                    self.count += 1;
-                }
-                ["M", "S", "M", "S"] => {
-                    let (row, col) = self.index_to_coords(index);
-                    println!("{} - ({:?}): {:?}", index + 1, (row + 1, col + 1), vals);
-                    self.count += 1;
-                }
-                ["S", "M", "S", "M"] => {
-                    let (row, col) = self.index_to_coords(index);
-                    println!("{} - ({:?}): {:?}", index + 1, (row + 1, col + 1), vals);
-                    self.count += 1;
-                }
-                _ => {}
-            }
-        }
+        matches!(
+            slice,
+            ["M", "M", "S", "S"]
+                | ["S", "S", "M", "M"]
+                | ["M", "S", "M", "S"]
+                | ["S", "M", "S", "M"]
+        )
     }
 
-    fn get_dir(&self, index: usize, dir: Direction) -> Option<String> {
+    fn get_dir(&self, index: usize, dir: Direction) -> Option<&str> {
         let (cur_row, cur_col) = self.index_to_coords(index);
 
         let (row_offset, col_offset) = dir.to_offset();
@@ -180,7 +130,7 @@ impl XmasMap {
         if let Some(new_index) =
             self.coords_to_index(row_offset + cur_row as i32, col_offset + cur_col as i32)
         {
-            return Some(self.arr[new_index].clone());
+            return Some(&self.arr[new_index]);
         }
 
         None
@@ -188,39 +138,57 @@ impl XmasMap {
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let mut map = XmasMap::new(input);
+    let map = XmasMap::new(input);
 
-    let mut x_indexs = Vec::new();
+    let directions = [
+        Direction::Up,
+        Direction::Down,
+        Direction::Left,
+        Direction::Right,
+        Direction::UpRight,
+        Direction::UpLeft,
+        Direction::DownRight,
+        Direction::DownLeft,
+    ];
 
-    for (i, char) in map.arr.iter().enumerate() {
-        if char == "X" {
-            x_indexs.push(i);
-        }
-    }
+    let count = map
+        .arr
+        .iter()
+        .enumerate()
+        .flat_map(|(i, char)| {
+            if char == "X" {
+                directions
+                    .iter()
+                    .map(|dir| map.search_direction(i, *dir))
+                    .filter(|x| *x)
+                    .collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            }
+        })
+        .count();
 
-    for i in x_indexs {
-        map.find_m(i);
-    }
-
-    Some(map.count)
+    Some(count as u32)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let mut map = XmasMap::new(input);
+    let map = XmasMap::new(input);
 
-    let mut x_indexs = Vec::new();
+    let count = map
+        .arr
+        .iter()
+        .enumerate()
+        .map(|(i, char)| {
+            if char == "A" {
+                return map.find_xmas(i);
+            }
 
-    for (i, char) in map.arr.iter().enumerate() {
-        if char == "A" {
-            x_indexs.push(i);
-        }
-    }
+            false
+        })
+        .filter(|x| *x)
+        .count();
 
-    for i in x_indexs {
-        map.find_xmas(i);
-    }
-
-    Some(map.count)
+    Some(count as u32)
 }
 
 #[cfg(test)]
