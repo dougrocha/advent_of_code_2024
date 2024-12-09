@@ -63,6 +63,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(31));
     }
 }
