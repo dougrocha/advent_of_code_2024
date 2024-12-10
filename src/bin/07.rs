@@ -8,28 +8,18 @@ struct Line {
     rhs: Vec<u64>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum Operator {
     Multiply,
     Add,
-}
-
-impl Operator {
-    fn get_permutations(len: usize) -> Vec<Vec<Operator>> {
-        repeat_n(vec![Operator::Multiply, Operator::Add], len - 1)
-            .multi_cartesian_product()
-            .collect()
-    }
+    Concat,
 }
 
 fn parse_input(input: &str) -> Vec<Line> {
     input
         .lines()
         .map(|line| {
-            dbg!(line);
             let (lhs, rhs) = line.split_once(":").unwrap();
-
-            dbg!(lhs, rhs);
 
             let lhs = lhs.parse::<u64>().expect("lhs should be valid");
             let rhs: Vec<u64> = rhs
@@ -45,10 +35,11 @@ fn parse_input(input: &str) -> Vec<Line> {
 pub fn part_one(input: &str) -> Option<u64> {
     let input = parse_input(input);
 
-    let mut acc = 0;
-
-    for Line { lhs, rhs } in input {
-        let permutations = Operator::get_permutations(rhs.len());
+    let res = input.iter().fold(0, |acc, Line { lhs, rhs }| {
+        let permutations: Vec<Vec<Operator>> =
+            repeat_n(vec![Operator::Multiply, Operator::Add], rhs.len() - 1)
+                .multi_cartesian_product()
+                .collect();
 
         for permutation in permutations {
             let mut rhs_iter = rhs.iter();
@@ -59,21 +50,62 @@ pub fn part_one(input: &str) -> Option<u64> {
                 match operator {
                     Operator::Multiply => sum *= rhs,
                     Operator::Add => sum += rhs,
+                    _ => {}
                 }
             }
 
-            if sum == lhs {
-                acc += sum;
-                break;
+            if sum == *lhs {
+                return acc + sum;
             }
         }
-    }
 
-    Some(acc)
+        acc
+    });
+
+    Some(res)
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let input = parse_input(input);
+
+    let res = input.iter().fold(0, |acc, Line { lhs, rhs }| {
+        let permutations: Vec<Vec<Operator>> = repeat_n(
+            vec![Operator::Multiply, Operator::Add, Operator::Concat],
+            rhs.len() - 1,
+        )
+        .multi_cartesian_product()
+        .collect();
+
+        for permutation in permutations {
+            let mut rhs_iter = rhs.iter();
+
+            let mut sum = *rhs_iter.next().expect("should always have first number");
+
+            for (num, operator) in rhs_iter.zip(&permutation) {
+                match operator {
+                    Operator::Multiply => sum *= num,
+                    Operator::Add => sum += num,
+                    Operator::Concat => {
+                        let mut sum_str = sum.to_string();
+                        let num_str = num.to_string();
+                        sum_str.push_str(&num_str);
+
+                        sum = sum_str
+                            .parse::<u64>()
+                            .expect("concatenated string should be a valid number")
+                    }
+                }
+            }
+
+            if sum == *lhs {
+                return acc + sum;
+            }
+        }
+
+        acc
+    });
+
+    Some(res)
 }
 
 #[cfg(test)]
@@ -90,6 +122,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(11387));
     }
 }
