@@ -8,7 +8,7 @@ enum Direction {
     Desc,
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i32> {
     let res = input
         .lines()
         .map(|line| {
@@ -22,10 +22,10 @@ pub fn part_one(input: &str) -> Option<u32> {
         })
         .filter(|x| *x);
 
-    Some(res.count() as u32)
+    Some(res.count() as i32)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<i32> {
     let res = input
         .lines()
         .map(|line| {
@@ -53,7 +53,7 @@ pub fn part_two(input: &str) -> Option<u32> {
         })
         .filter(|x| *x);
 
-    Some(res.count() as u32)
+    Some(res.count() as i32)
 }
 
 fn is_safe(numbers: &[i32]) -> bool {

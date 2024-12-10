@@ -73,8 +73,8 @@ pub fn read_example(day: Day) -> String {
 
 pub fn execute_parts<F1, F2>(input: &str, day: Day, part_one: F1, part_two: F2)
 where
-    F1: FnOnce(&str) -> Option<u32>,
-    F2: FnOnce(&str) -> Option<u32>,
+    F1: FnOnce(&str) -> Option<i32>,
+    F2: FnOnce(&str) -> Option<i32>,
 {
     println!("Running day: {}", day);
     if let Some(res) = part_one(input) {

@@ -2,7 +2,7 @@ advent_of_code_2024::solution!(1);
 
 use std::{iter::zip, ops::Mul};
 
-fn parse_data(input: &str) -> (Vec<u32>, Vec<u32>) {
+fn parse_data(input: &str) -> (Vec<i32>, Vec<i32>) {
     let mut first_col = Vec::new();
     let mut second_col = Vec::new();
 
@@ -11,7 +11,7 @@ fn parse_data(input: &str) -> (Vec<u32>, Vec<u32>) {
         .map(|line| {
             line.split_whitespace()
                 .map(|char| char.parse().unwrap())
-                .collect::<Vec<u32>>()
+                .collect::<Vec<i32>>()
         })
         .for_each(|line| {
             first_col.push(line[0]);
@@ -21,7 +21,7 @@ fn parse_data(input: &str) -> (Vec<u32>, Vec<u32>) {
     (first_col, second_col)
 }
 
-fn part_one(input: &str) -> Option<u32> {
+fn part_one(input: &str) -> Option<i32> {
     let (mut first_col, mut second_col) = parse_data(input);
 
     first_col.sort();
@@ -38,18 +38,19 @@ fn part_one(input: &str) -> Option<u32> {
     )
 }
 
-fn part_two(input: &str) -> Option<u32> {
+fn part_two(input: &str) -> Option<i32> {
     let (first_col, second_col) = parse_data(input);
 
     Some(
         first_col
             .iter()
-            .map(|f| (second_col.iter().filter(|s| *s == f).count() as u32).mul(*f))
+            .map(|f| (second_col.iter().filter(|s| *s == f).count() as i32).mul(*f))
             .sum(),
     )
 }
 
 #[cfg(test)]
+#[divan::bench_group()]
 mod tests {
     use super::*;
     use advent_of_code_2024::read_example;
@@ -64,5 +65,10 @@ mod tests {
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
         assert_eq!(result, Some(31));
+    }
+
+    #[divan::bench]
+    fn bench_part_one() {
+        part_one(&read_example(DAY));
     }
 }

@@ -14,16 +14,16 @@ pub fn create_files(day: Day) {
     let _ = fs::write(input_path, downloaded_input);
 
     let _ = fs::write(example_path, "");
-    println!("Remember to fill out example path");
+    println!("--> REMEMBER TO FILL OUT EXAMPLE PATH <--");
 }
 
 const MODULE_TEMPLATE_TEXT: &str = r"advent_of_code_2024::solution!(%%DAY%%);
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i32> {
     None
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<i32> {
     None
 }
 

@@ -23,7 +23,7 @@ fn parse_input(input: &str) -> (Vec<(i32, i32)>, Vec<Vec<i32>>) {
     (rules, pages_list)
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i32> {
     let (rules, pages_list) = parse_input(input);
 
     let valid = pages_list
@@ -50,14 +50,14 @@ pub fn part_one(input: &str) -> Option<u32> {
         })
         .collect::<Vec<_>>();
 
-    Some(valid.iter().map(|x| x[x.len() / 2]).sum::<i32>() as u32)
+    Some(valid.iter().map(|x| x[x.len() / 2]).sum::<i32>())
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    let (rules, pages_list) = parse_input(input);
+pub fn part_two(input: &str) -> Option<i32> {
+    let (rules, mut pages_list) = parse_input(input);
 
-    let not_valid = pages_list
-        .iter()
+    let mut not_valid = pages_list
+        .iter_mut()
         .flat_map(|pages| {
             for (before, after) in &rules {
                 let filtered: Vec<i32> = pages
@@ -80,11 +80,31 @@ pub fn part_two(input: &str) -> Option<u32> {
         })
         .collect::<Vec<_>>();
 
-    // check the not valids and switch places using the rules
-    // for each rule, if it is not valid then swap
-    // swap until valid and return middle index sum like part
+    not_valid.iter_mut().for_each(|pages| 'outer: loop {
+        for (before, after) in &rules {
+            let filtered: Vec<(usize, i32)> = pages
+                .iter()
+                .enumerate()
+                .filter_map(|(i, x)| {
+                    if x == before || x == after {
+                        Some((i, *x))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
-    Some(0)
+            if filtered.len() == 2 && (*before != filtered[0].1 || *after != filtered[1].1) {
+                pages.swap(filtered[0].0, filtered[1].0);
+
+                continue 'outer;
+            }
+        }
+
+        break;
+    });
+
+    Some(not_valid.iter().map(|x| x[x.len() / 2]).sum::<i32>())
 }
 
 #[cfg(test)]
@@ -101,6 +121,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(123));
     }
 }

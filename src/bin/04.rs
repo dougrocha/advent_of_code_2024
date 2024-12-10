@@ -32,8 +32,6 @@ struct XmasMap {
     arr: Vec<String>,
     width: usize,
     height: usize,
-
-    count: u32,
 }
 
 impl XmasMap {
@@ -48,12 +46,7 @@ impl XmasMap {
             .map(String::from)
             .collect();
 
-        Self {
-            width,
-            height,
-            arr,
-            count: 0,
-        }
+        Self { width, height, arr }
     }
 
     fn index_to_coords(&self, i: usize) -> (usize, usize) {
@@ -137,7 +130,7 @@ impl XmasMap {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i32> {
     let map = XmasMap::new(input);
 
     let directions = [
@@ -168,10 +161,10 @@ pub fn part_one(input: &str) -> Option<u32> {
         })
         .count();
 
-    Some(count as u32)
+    Some(count as i32)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<i32> {
     let map = XmasMap::new(input);
 
     let count = map
@@ -188,7 +181,7 @@ pub fn part_two(input: &str) -> Option<u32> {
         .filter(|x| *x)
         .count();
 
-    Some(count as u32)
+    Some(count as i32)
 }
 
 #[cfg(test)]

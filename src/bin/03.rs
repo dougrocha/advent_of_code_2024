@@ -5,7 +5,7 @@ struct MulParser<'a> {
 }
 
 impl Iterator for MulParser<'_> {
-    type Item = u32;
+    type Item = i32;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(index) = self.rest.find("mul(") {
@@ -35,7 +35,7 @@ impl Iterator for MulParser<'_> {
 
             let s = &self.rest[1..read - 1]
                 .split(',')
-                .map(|x| x.parse::<u32>().unwrap_or(0))
+                .map(|x| x.parse::<i32>().unwrap_or(0))
                 .collect::<Vec<_>>();
 
             return Some(s[0] * s[1]);
@@ -45,15 +45,15 @@ impl Iterator for MulParser<'_> {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i32> {
     let parser = MulParser { rest: input };
 
-    let sum = parser.sum::<u32>();
+    let sum = parser.sum();
 
     Some(sum)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<i32> {
     let mut splits = input.split("don't()");
 
     let sum = part_one(splits.next().unwrap()).unwrap_or(0);
