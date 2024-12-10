@@ -77,13 +77,24 @@ where
     F2: FnOnce(&str) -> Option<T>,
     T: Copy + std::fmt::Debug,
 {
+    use std::time::Instant;
+
     println!("Running day: {}", day);
+
+    let now = Instant::now();
     if let Some(res) = part_one(input) {
         println!("Part one: {:?}", res);
+        println!("Ran in: {:.2?}", now.elapsed());
+    } else {
+        println!("Part one did not run.");
     }
 
+    let now = Instant::now();
     if let Some(res) = part_two(input) {
         println!("Part two: {:?}", res);
+        println!("Ran in: {:.2?}", now.elapsed());
+    } else {
+        println!("Part two did not run.");
     }
 }
 
