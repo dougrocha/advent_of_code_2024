@@ -71,10 +71,11 @@ pub fn read_example(day: Day) -> String {
     input.expect("example file to be opened")
 }
 
-pub fn execute_parts<F1, F2>(input: &str, day: Day, part_one: F1, part_two: F2)
+pub fn execute_parts<F1, F2, T>(input: &str, day: Day, part_one: F1, part_two: F2)
 where
-    F1: FnOnce(&str) -> Option<i32>,
-    F2: FnOnce(&str) -> Option<i32>,
+    F1: FnOnce(&str) -> Option<T>,
+    F2: FnOnce(&str) -> Option<T>,
+    T: Copy + std::fmt::Debug,
 {
     println!("Running day: {}", day);
     if let Some(res) = part_one(input) {
