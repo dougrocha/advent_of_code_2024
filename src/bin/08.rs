@@ -45,7 +45,7 @@ pub fn part_one(input: &str) -> Option<i32> {
     let res = input.chars().filter(|x| *x != '\n').collect_vec();
     let mut result: String = res.into_iter().collect();
 
-    for (_, arr) in map.iter() {
+    for arr in map.values() {
         for antenna_pair in arr.iter().combinations(2) {
             let first = antenna_pair[0];
             let second = antenna_pair[1];
@@ -53,29 +53,19 @@ pub fn part_one(input: &str) -> Option<i32> {
             let diff_x = first.0 as i32 - second.0 as i32;
             let diff_y = first.1 as i32 - second.1 as i32;
 
-            {
-                let new_x = first.0 as i32 + diff_x;
-                let new_y = first.1 as i32 + diff_y;
-
-                let (row, col) = (new_x, new_y);
-
-                if let Some(index) = coords_to_index(width, height, row, col) {
-                    if result.get(index..index + 1).is_some() {
-                        result.replace_range(index..index + 1, "#");
-                    }
+            let row = first.0 as i32 + diff_x;
+            let col = first.1 as i32 + diff_y;
+            if let Some(index) = coords_to_index(width, height, row, col) {
+                if result.get(index..index + 1).is_some() {
+                    result.replace_range(index..index + 1, "#");
                 }
             }
 
-            {
-                let new_x = second.0 as i32 - diff_x;
-                let new_y = second.1 as i32 - diff_y;
-
-                let (row, col) = (new_x, new_y);
-
-                if let Some(index) = coords_to_index(width, height, row, col) {
-                    if result.get(index..index + 1).is_some() {
-                        result.replace_range(index..index + 1, "#");
-                    }
+            let row = second.0 as i32 - diff_x;
+            let col = second.1 as i32 - diff_y;
+            if let Some(index) = coords_to_index(width, height, row, col) {
+                if result.get(index..index + 1).is_some() {
+                    result.replace_range(index..index + 1, "#");
                 }
             }
         }
@@ -91,7 +81,59 @@ pub fn part_one(input: &str) -> Option<i32> {
 }
 
 pub fn part_two(input: &str) -> Option<i32> {
-    None
+    let map = parse_antennas(input);
+
+    let width = input.lines().next().unwrap().len();
+    let height = input.lines().count();
+
+    let res = input.chars().filter(|x| *x != '\n').collect_vec();
+    let mut result: String = res.into_iter().collect();
+
+    for arr in map.values() {
+        for antenna_pair in arr.iter().combinations(2) {
+            let first = antenna_pair[0];
+            let second = antenna_pair[1];
+
+            let diff_x = first.0 as i32 - second.0 as i32;
+            let diff_y = first.1 as i32 - second.1 as i32;
+
+            let mut row = first.0 as i32;
+            let mut col = first.1 as i32;
+            loop {
+                row += diff_x;
+                col += diff_y;
+                if let Some(index) = coords_to_index(width, height, row, col) {
+                    if result.get(index..index + 1).is_some() {
+                        result.replace_range(index..index + 1, "#");
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            let mut row = second.0 as i32;
+            let mut col = second.1 as i32;
+            loop {
+                row -= diff_x;
+                col -= diff_y;
+                if let Some(index) = coords_to_index(width, height, row, col) {
+                    if result.get(index..index + 1).is_some() {
+                        result.replace_range(index..index + 1, "#");
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    for line in &result.chars().chunks(width) {
+        println!("{}", line.collect::<String>());
+    }
+
+    let sum = result.chars().filter(|x| *x != '.').count();
+
+    Some(sum as i32)
 }
 
 #[cfg(test)]
@@ -108,6 +150,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(34));
     }
 }
