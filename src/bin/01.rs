@@ -50,7 +50,6 @@ fn part_two(input: &str) -> Option<i32> {
 }
 
 #[cfg(test)]
-#[divan::bench_group()]
 mod tests {
     use super::*;
     use advent_of_code_2024::read_example;
@@ -65,10 +64,5 @@ mod tests {
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
         assert_eq!(result, Some(31));
-    }
-
-    #[divan::bench]
-    fn bench_part_one() {
-        part_one(&read_example(DAY));
     }
 }
