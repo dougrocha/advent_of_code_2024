@@ -19,11 +19,11 @@ pub fn create_files(day: Day) {
 
 const MODULE_TEMPLATE_TEXT: &str = r"advent_of_code_2024::solution!(%%DAY%%);
 
-pub fn part_one(input: &str) -> Option<i32> {
+pub fn part_one(input: &str) -> Option<u32> {
     None
 }
 
-pub fn part_two(input: &str) -> Option<i32> {
+pub fn part_two(input: &str) -> Option<u32> {
     None
 }
 
