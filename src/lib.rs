@@ -16,7 +16,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn to_offset(self) -> (i32, i32) {
+    pub fn to_offset(self) -> (i32, i32) {
         match self {
             Direction::Up => (-1, 0),
             Direction::Down => (1, 0),
@@ -32,15 +32,15 @@ impl Direction {
 
 pub const DIRECTIONS: [Direction; 4] = [
     Direction::Up,
+    Direction::Right,
     Direction::Down,
     Direction::Left,
-    Direction::Right,
 ];
 
 pub const DIAGONAL_DIRECTIONS: [Direction; 4] = [
     Direction::UpLeft,
-    Direction::DownLeft,
     Direction::UpRight,
+    Direction::DownRight,
     Direction::DownLeft,
 ];
 

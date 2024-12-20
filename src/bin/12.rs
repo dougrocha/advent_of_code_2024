@@ -1,5 +1,5 @@
-use advent_of_code_2024::{Coords, DIAGONAL_DIRECTIONS, DIRECTIONS};
-use itertools::chain;
+use advent_of_code_2024::{Coords, DIRECTIONS};
+use itertools::Itertools;
 use std::collections::VecDeque;
 
 advent_of_code_2024::solution!(12);
@@ -33,36 +33,23 @@ impl From<&str> for Grid {
 
 #[derive(Debug)]
 struct Region {
-    plant: char,
     area: u32,
     parameter: u32,
-    corners: Vec<(usize, usize)>,
 }
 
 impl Region {
     fn get_price(&self) -> u32 {
         self.area * self.parameter
     }
-
-    fn calc_parameter_with_corners(&self) -> Self {
-        let parameter = 0;
-
-        Self {
-            plant: self.plant,
-            area: self.area,
-            parameter,
-            corners: vec![],
-        }
-    }
 }
 
 impl Grid {
-    fn calc_area_parameter(&self) -> Vec<Region> {
+    fn calc_regions(&self) -> Vec<Region> {
         let mut res: Vec<Region> = Vec::new();
 
         let mut visited = vec![false; self.width * self.height];
 
-        for (index, plant) in self.map.iter().enumerate() {
+        for index in 0..self.map.len() {
             if visited[index] {
                 continue;
             }
@@ -98,23 +85,18 @@ impl Grid {
                 }
             }
 
-            res.push(Region {
-                plant: *plant,
-                area,
-                parameter,
-                corners: vec![],
-            });
+            res.push(Region { area, parameter });
         }
 
         res
     }
 
-    fn calc_sides(&self) -> Vec<Region> {
+    fn calc_regions_with_corners(&self) -> Vec<Region> {
         let mut res: Vec<Region> = Vec::new();
 
         let mut visited = vec![false; self.width * self.height];
 
-        for (index, plant) in self.map.iter().enumerate() {
+        for index in 0..self.map.len() {
             if visited[index] {
                 continue;
             }
@@ -123,7 +105,7 @@ impl Grid {
             queue.push_back(index);
 
             let mut area = 0;
-            let mut corners = Vec::new();
+            let mut parameter = 0;
 
             while let Some(plant_index) = queue.pop_front() {
                 if visited[plant_index] {
@@ -145,83 +127,74 @@ impl Grid {
                     }
                 });
 
-                if self.is_corner(plant_index) {
-                    corners.push(self.index_to_coords(plant_index));
-                }
+                let corners = self.count_corners(plant_index);
+
+                parameter += corners;
             }
 
-            res.push(Region {
-                plant: *plant,
-                area,
-                parameter: 0,
-                corners,
-            });
+            res.push(Region { area, parameter });
         }
 
         res
     }
 
-    fn is_corner(&self, index: usize) -> bool {
+    fn count_corners(&self, index: usize) -> u32 {
         let plant = self.map[index];
 
-        let arr: Vec<bool> = chain(DIRECTIONS, DIAGONAL_DIRECTIONS)
-            .map(|direction| {
-                if let Some(pos) = self.move_index(index, direction) {
-                    let next_plant = self.map[pos];
+        let coords = self.index_to_coords(index);
 
-                    if plant == next_plant {
-                        return false;
-                    }
-                }
+        let mut count = 0;
 
-                true
+        for ([x, y], [x1, y1]) in DIRECTIONS
+            .iter()
+            .map(|x| {
+                let offset = x.to_offset();
+                [offset.0, offset.1]
             })
-            .collect();
+            .circular_tuple_windows()
+        {
+            let test_a = self
+                .coords_to_index(x + coords.0 as i32, y + coords.1 as i32)
+                .map(|x| self.map[x])
+                .is_some_and(|c| c == plant);
+            let test_b = self
+                .coords_to_index(x1 + coords.0 as i32, y1 + coords.1 as i32)
+                .map(|x| self.map[x])
+                .is_some_and(|c| c == plant);
 
-        let [up, down, left, right, up_left, down_left, up_right, down_right]: [bool; 8] =
-            arr.try_into().ok().unwrap();
+            if test_a
+                && test_b
+                && self
+                    .coords_to_index(x + x1 + coords.0 as i32, y + y1 + coords.1 as i32)
+                    .map(|x| self.map[x])
+                    .is_some_and(|c| c != plant)
+            {
+                count += 1;
+                continue;
+            }
 
-        if (down || up) && (left || right) {
-            dbg!('1');
-            return true;
-        }
-        if up_left && !up && !left && !down && !right {
-            dbg!('2');
-            return true;
-        }
-        if up_right && !up && !right && !down && !left {
-            dbg!('3');
-            return true;
-        }
-        if down_left && !down && !left && !up && !right {
-            dbg!('4');
-            return true;
-        }
-        if down_right && !down && !right && !up && !left {
-            dbg!('5');
-            return true;
+            if !test_a && !test_b {
+                count += 1;
+            }
         }
 
-        false
+        count
     }
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let grid = Grid::from(input);
 
-    let res = grid.calc_area_parameter();
-
-    Some(res.iter().map(|x| x.get_price()).sum())
+    Some(grid.calc_regions().iter().map(|x| x.get_price()).sum())
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
     let grid = Grid::from(input);
 
-    let res = grid.calc_sides();
-
     Some(
-        res.iter()
-            .map(|x| x.calc_parameter_with_corners().get_price())
+        grid.calc_regions_with_corners()
+            .iter()
+            .map(|x| x.get_price())
             .sum(),
     )
 }
