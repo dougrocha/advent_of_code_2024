@@ -1,14 +1,9 @@
-use std::ops::Mul;
-
 advent_of_code_2024::solution!(13);
-
-const BUTTON_A_TOKENS: u64 = 3;
-const BUTTON_B_TOKENS: u64 = 1;
 
 #[derive(Default, Debug, Clone, Copy)]
 struct Vec2 {
-    x: f64,
-    y: f64,
+    x: i64,
+    y: i64,
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -17,75 +12,86 @@ struct ClawMachine {
     b: Vec2,
     price: Vec2,
 }
-
-fn parse_input(input: &str) -> Vec<ClawMachine> {
-    input
-        .split("\n\n")
-        .map(|x| {
-            let mut buttons = x.lines().map(|x| {
-                let mut nums = x.split(',').filter_map(|x| {
-                    x.trim_start_matches(|x: char| !char::is_numeric(x))
-                        .trim_end_matches(',')
-                        .parse()
-                        .ok()
-                });
-
-                Vec2 {
-                    x: nums.next().expect("Expected x coordinate"),
-                    y: nums.next().expect("Expected y coordinate"),
-                }
+impl From<&str> for ClawMachine {
+    fn from(value: &str) -> Self {
+        let mut buttons = value.lines().map(|x| {
+            let mut nums = x.split(',').filter_map(|x| {
+                x.trim_start_matches(|x: char| !char::is_numeric(x))
+                    .trim_end_matches(',')
+                    .parse()
+                    .ok()
             });
 
-            ClawMachine {
-                a: buttons.next().expect("Expected button a"),
-                b: buttons.next().expect("Expected button b"),
-                price: buttons.next().expect("Expected price"),
+            Vec2 {
+                x: nums.next().expect("Expected x coordinate"),
+                y: nums.next().expect("Expected y coordinate"),
             }
-        })
-        .collect()
+        });
+
+        Self {
+            a: buttons.next().expect("Expected button a"),
+            b: buttons.next().expect("Expected button b"),
+            price: buttons.next().expect("Expected price"),
+        }
+    }
 }
 
-pub fn part_one(input: &str) -> Option<u64> {
-    let claw_machines = parse_input(input);
+impl ClawMachine {
+    const BUTTON_A_TOKENS: i64 = 3;
+    const BUTTON_B_TOKENS: i64 = 1;
 
-    let sum = claw_machines
-        .iter()
-        .map(|&x| {
-            let button_a = x.a;
-            let button_b = x.b;
-            let price = x.price;
+    /// Uses Cramers method
+    /// https://www.youtube.com/watch?v=KOUjAzDyeZY
+    ///
+    /// ax(x) + bx(y) = price.x
+    /// ay(x) + by(y) = price.y
+    ///
+    fn solve(&self) -> i64 {
+        let a = self.a;
+        let b = self.b;
+        let price = self.price;
 
-            let mut found_y = 0;
+        let d = (a.x * b.y) - (a.y * b.x);
 
-            for i in 0..100 {
-                let res = button_a.y * ((price.x - button_b.x * i as f64) / button_a.x)
-                    + (button_b.y * i as f64);
+        if d == 0 {
+            return 0; // No unique solution
+        }
 
-                if (res - price.y).abs() < f64::EPSILON {
-                    found_y = i;
-                    break;
-                }
-            }
+        let d_x = (price.x * b.y) - (price.y * b.x);
+        let d_y = (a.x * price.y) - (a.y * price.x);
 
-            if found_y == 0 {
-                return 0;
-            }
+        if d_x % d != 0 || d_y % d != 0 {
+            return 0;
+        }
 
-            let mut found_x = 0;
+        let x = d_x / d;
+        let y = d_y / d;
 
-            for i in 0..100 {
-                let res = (button_a.x * i as f64) + (button_b.x * found_y as f64);
+        let button_a_cost = Self::BUTTON_A_TOKENS * x;
+        let button_b_cost = Self::BUTTON_B_TOKENS * y;
 
-                if (res - price.x).abs() < f64::EPSILON {
-                    found_x = i;
-                    break;
-                }
-            }
+        button_a_cost + button_b_cost
+    }
+}
 
-            let button_a_cost = BUTTON_A_TOKENS * found_x;
-            let button_b_cost = BUTTON_B_TOKENS * found_y;
+pub fn part_one(input: &str) -> Option<i64> {
+    let sum = input
+        .split("\n\n")
+        .map(ClawMachine::from)
+        .map(|claw_machine| claw_machine.solve())
+        .sum();
 
-            button_a_cost + button_b_cost
+    Some(sum)
+}
+
+pub fn part_two(input: &str) -> Option<i64> {
+    let sum = input
+        .split("\n\n")
+        .map(ClawMachine::from)
+        .map(|mut claw_machine| {
+            claw_machine.price.x += 10_000_000_000_000;
+            claw_machine.price.y += 10_000_000_000_000;
+            claw_machine.solve()
         })
         .sum();
 
@@ -106,6 +112,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(875318608908));
     }
 }
