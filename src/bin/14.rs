@@ -1,6 +1,5 @@
-use advent_of_code_2024::{Coords, IVec2, DIRECTIONS};
+use advent_of_code_2024::IVec2;
 use itertools::Itertools;
-use std::collections::{HashSet, VecDeque};
 
 advent_of_code_2024::solution!(14);
 
@@ -12,16 +11,6 @@ struct Robot {
 
 struct Headquarters {
     robots: Vec<Robot>,
-}
-
-impl Coords for Headquarters {
-    fn width(&self) -> usize {
-        Self::WIDTH
-    }
-
-    fn height(&self) -> usize {
-        Self::HEIGHT
-    }
 }
 
 impl Headquarters {
@@ -147,6 +136,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&read_example(DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(1));
     }
 }
