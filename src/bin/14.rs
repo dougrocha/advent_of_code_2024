@@ -1,4 +1,6 @@
-use advent_of_code_2024::IVec2;
+use advent_of_code_2024::{Coords, IVec2, DIRECTIONS};
+use itertools::Itertools;
+use std::collections::{HashSet, VecDeque};
 
 advent_of_code_2024::solution!(14);
 
@@ -12,62 +14,84 @@ struct Headquarters {
     robots: Vec<Robot>,
 }
 
+impl Coords for Headquarters {
+    fn width(&self) -> usize {
+        Self::WIDTH
+    }
+
+    fn height(&self) -> usize {
+        Self::HEIGHT
+    }
+}
+
 impl Headquarters {
     const TIME_DURATION: i32 = 100;
     const WIDTH: usize = if cfg!(test) { 11 } else { 101 };
     const HEIGHT: usize = if cfg!(test) { 7 } else { 103 };
 
-    fn solve(&mut self) {
+    fn move_robots_by_time(&mut self) {
         for robot in &mut self.robots.iter_mut() {
-            let mut new_x = robot.pos.x + robot.velocity.x * Self::TIME_DURATION;
-            let mut new_y = robot.pos.y + robot.velocity.y * Self::TIME_DURATION;
-
-            if new_y < 0 {
-                new_y = (new_y % Self::HEIGHT as i32) + Self::HEIGHT as i32;
-            }
-
-            if new_x < 0 {
-                new_x = (new_x % Self::WIDTH as i32) + Self::WIDTH as i32;
-            }
-
-            let new_x = new_x % Self::WIDTH as i32;
-            let new_y = new_y % Self::HEIGHT as i32;
-
-            robot.pos.x = new_x;
-            robot.pos.y = new_y;
+            robot.pos.x = (robot.pos.x + robot.velocity.x * Self::TIME_DURATION)
+                .rem_euclid(Self::WIDTH as i32);
+            robot.pos.y = (robot.pos.y + robot.velocity.y * Self::TIME_DURATION)
+                .rem_euclid(Self::HEIGHT as i32);
         }
     }
 
-    fn safety_factor(&self) -> u32 {
-        let top_left = ((0, 0), (Self::WIDTH / 2, Self::HEIGHT / 2));
-        let top_right = ((Self::WIDTH / 2, 0), (Self::WIDTH, Self::HEIGHT / 2));
-        let bottom_left = ((0, Self::HEIGHT / 2), (Self::WIDTH / 2, Self::HEIGHT));
-        let bottom_right = (
-            (Self::WIDTH / 2, Self::HEIGHT / 2),
-            (Self::WIDTH, Self::HEIGHT),
-        );
+    fn safety_factor(&self) -> usize {
+        let quadrants = [
+            ((0..Self::WIDTH / 2), (0..Self::HEIGHT / 2)),
+            ((Self::WIDTH / 2..Self::WIDTH), (0..Self::HEIGHT / 2)),
+            ((0..Self::WIDTH / 2), (Self::HEIGHT / 2..Self::HEIGHT)),
+            (
+                (Self::WIDTH / 2..Self::WIDTH),
+                (Self::HEIGHT / 2..Self::HEIGHT),
+            ),
+        ];
 
-        let mut total = 1;
+        quadrants
+            .iter()
+            .map(|(x_range, y_range)| {
+                self.robots
+                    .iter()
+                    .filter(|robot| {
+                        let (x, y) = (robot.pos.x as usize, robot.pos.y as usize);
 
-        for (start, end) in &[top_left, top_right, bottom_left, bottom_right] {
-            let mut cur_count = 0;
-            for robot in &self.robots {
-                let x = robot.pos.x as usize;
-                let y = robot.pos.y as usize;
+                        if x == Self::WIDTH / 2 || y == Self::HEIGHT / 2 {
+                            return false;
+                        }
 
-                if x == Self::WIDTH / 2 || y == Self::HEIGHT / 2 {
-                    continue;
-                }
+                        if x_range.contains(&x) && y_range.contains(&y) {
+                            return true;
+                        }
 
-                if start.0 <= x && start.1 <= y && x < end.0 && y < end.1 {
-                    cur_count += 1;
-                }
+                        false
+                    })
+                    .count()
+            })
+            .product()
+    }
+
+    fn find_tree(&mut self) -> u32 {
+        let mut seconds = 0;
+        loop {
+            for robot in &mut self.robots.iter_mut() {
+                robot.pos.x = (robot.pos.x + robot.velocity.x).rem_euclid(Self::WIDTH as i32);
+                robot.pos.y = (robot.pos.y + robot.velocity.y).rem_euclid(Self::HEIGHT as i32);
             }
 
-            total *= cur_count;
+            seconds += 1;
+            if self.test_tree(&self.robots) {
+                break;
+            }
         }
 
-        total
+        seconds
+    }
+
+    // all positions should somehow be unique?
+    fn test_tree(&self, robots: &[Robot]) -> bool {
+        robots.iter().map(|Robot { pos, .. }| pos).all_unique()
     }
 }
 
@@ -100,12 +124,13 @@ impl From<&str> for Headquarters {
 
 pub fn part_one(input: &str) -> Option<u32> {
     let mut hq = Headquarters::from(input);
-    hq.solve();
-    Some(hq.safety_factor())
+    hq.move_robots_by_time();
+    Some(hq.safety_factor() as u32)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut hq = Headquarters::from(input);
+    Some(hq.find_tree())
 }
 
 #[cfg(test)]
