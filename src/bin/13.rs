@@ -1,17 +1,14 @@
+use advent_of_code_2024::I64Vec2;
+
 advent_of_code_2024::solution!(13);
 
 #[derive(Default, Debug, Clone, Copy)]
-struct Vec2 {
-    x: i64,
-    y: i64,
+struct ClawMachine {
+    a: I64Vec2,
+    b: I64Vec2,
+    price: I64Vec2,
 }
 
-#[derive(Default, Debug, Clone, Copy)]
-struct ClawMachine {
-    a: Vec2,
-    b: Vec2,
-    price: Vec2,
-}
 impl From<&str> for ClawMachine {
     fn from(value: &str) -> Self {
         let mut buttons = value.lines().map(|x| {
@@ -22,7 +19,7 @@ impl From<&str> for ClawMachine {
                     .ok()
             });
 
-            Vec2 {
+            I64Vec2 {
                 x: nums.next().expect("Expected x coordinate"),
                 y: nums.next().expect("Expected y coordinate"),
             }

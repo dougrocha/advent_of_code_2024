@@ -1,6 +1,8 @@
 pub mod day;
+pub mod math;
 pub mod template;
 
+pub use math::*;
 pub use template::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
